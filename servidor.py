@@ -1,3 +1,5 @@
+from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash
 import sqlite3
 from flask import Flask, request
 
@@ -25,8 +27,43 @@ def inicio():
 def registro():
     datos = request.json
     usuario = datos["usuario"]
-    contraseña = datos["contrasena"]
+    contrasena = datos["contrasena"]
+    hash_clave = generate_password_hash(contrasena)
 
-    return f"Usuario {usuario} recibido correctamente"
+    conn = sqlite3.connect("usuarios.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO usuarios (usuario, contrasena) VALUES (?, ?)",
+        (usuario, hash_clave)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return f"Usuario {usuario} guardado correctamente"
+
+@app.route("/login", methods=["POST"])
+def login():
+    datos = request.json
+    usuario = datos["usuario"]
+    contrasena = datos["contrasena"]
+
+    conn = sqlite3.connect("usuarios.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT contrasena FROM usuarios WHERE usuario = ?",
+        (usuario,)
+    )
+
+    resultado = cursor.fetchone()
+    conn.close()
+
+    if resultado and check_password_hash(resultado[0], contrasena):
+        return "Login correcto"
+
+    return "Usuario o contraseña incorrectos"
+
 inicializar_db()
 app.run()
