@@ -65,5 +65,13 @@ def login():
 
     return "Usuario o contraseña incorrectos"
 
+@app.route("/tareas")
+def tareas():
+    return """
+    <h1>Bienvenido al sistema de tareas</h1>
+    <p>API funcionando correctamente</p>
+    """
+
+
 inicializar_db()
 app.run()
